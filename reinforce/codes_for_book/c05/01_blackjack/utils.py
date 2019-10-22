@@ -59,9 +59,9 @@ def greedy_policy(A, s, Q):
         
 def epsilon_greedy_pi(A, s, Q, a, epsilon = 0.1):
     m = len(A)
-    greedy_p = greedy_pi(A, s, Q, a)
+    greedy_p = greedy_pi(A, s, Q, a) # prob
     #print("greedy prob:{}".format(greedy_p))
-    if greedy_p == 0:
+    if greedy_p == 0: # 其他情况
         return epsilon / m
     n = int(1.0/greedy_p)
     return (1 - epsilon) * greedy_p + epsilon/m
@@ -71,7 +71,7 @@ def epsilon_greedy_policy(A, s, Q, epsilon, show_random_num = False):
     pis = []
     m = len(A)
     for i in range(m):
-        pis.append(epsilon_greedy_pi(A, s, Q, A[i], epsilon))
+        pis.append(epsilon_greedy_pi(A, s, Q, A[i], epsilon)) # 在epsilon greedy pi下，每个a的概率
     rand_value = random.random() # 产生一个0,1的随机数
     #if show_random_num:
     #    print("产生的随机数概率为:{:.2f}".format(rand_value))

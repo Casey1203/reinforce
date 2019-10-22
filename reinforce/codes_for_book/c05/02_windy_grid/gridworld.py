@@ -20,7 +20,7 @@ class Grid(object):
     def __init__(self, x:int = None, 
                        y:int = None, 
                        type:int = 0, 
-                       reward:int = 0.0,
+                       reward:float = 0.0,
                        value:float = 0.0):  # value 属性备用
         self.x = x                  # 坐标x
         self.y = y

@@ -44,6 +44,7 @@ class SarsaAgent(Agent):
             q_prime = get_dict(self.Q, s1, a1)
             td_target = r1 + gamma * q_prime
             #alpha = alpha / num_episode
+            # Q(S,A) = Q(S,A) + alpha * (R+gamma*Q(S',A')-Q(S,A))
             new_q = old_q + alpha * (td_target - old_q)
             set_dict(self.Q, new_q, s0, a0)
             s0, a0 = s1, a1
@@ -79,23 +80,26 @@ class SarsaLambdaAgent(Agent):
                 self.env.render()
             a1 = self.perform_policy(s1, epsilon)
             
-            q = get_dict(self.Q, s0, a0)
-            q_prime = get_dict(self.Q, s1, a1)
+            q = get_dict(self.Q, s0, a0) # old q
+            q_prime = get_dict(self.Q, s1, a1) # new q
+            # delta = R + gamma * Q(s',s') - Q(s,s)
             delta = r1 + gamma * q_prime - q
             
             e = get_dict(E, s0, a0)
             e += 1
             set_dict(E, e, s0, a0)
-
+            # for all s in S, a in A
             for s in self.S:
                 for a in self.A:
                     e_value = get_dict(E, s, a)
                     old_q = get_dict(self.Q, s, a)
+                    # Q(s,a) = Q(s,a) + alpha * delta * E(s,a)
                     new_q = old_q + alpha * delta * e_value
+                    # E(s,a) = gamma * lambda * E(s,a)
                     new_e = gamma * lambda_ * e_value
                     set_dict(self.Q, new_q, s, a)
                     set_dict(E, new_e, s, a)
-                    
+            # s=s', a=a'
             s0, a0 = s1, a1
             time_in_episode += 1
         if display:
@@ -122,14 +126,16 @@ class QAgent(Agent):
         is_done = False
         while not is_done:
             # add code here
-            a0 = self.perform_policy(s0, epsilon)
+            a0 = self.perform_policy(s0, epsilon) # 此时的policy是epsilon greedy policy
             s1, r1, is_done, info, total_reward = self.act(a0)
             if display:
                 self.env.render()
-            self.policy = greedy_policy
+            self.policy = greedy_policy # 更换策略为greedy policy
             a1 = greedy_policy(self.A, s1, self.Q)
+            # Q(s,a)
             old_q = get_dict(self.Q, s0, a0)
             q_prime = get_dict(self.Q, s1, a1)
+            # R + gamma * Q(s',a')
             td_target = r1 + gamma * q_prime
             #alpha = alpha / num_episode
             new_q = old_q + alpha * (td_target - old_q)
@@ -148,7 +154,7 @@ class ApproxQAgent(Agent):
                        trans_capacity = 20000,
                        hidden_dim: int = 16):
         if env is None:
-            raise "agent should have an environment"
+            raise ("agent should have an environment")
         super(ApproxQAgent, self).__init__(env, trans_capacity)
         self.input_dim, self.output_dim = 1, 1
         if isinstance(env.observation_space, spaces.Discrete):
