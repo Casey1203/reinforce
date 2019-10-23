@@ -242,15 +242,16 @@ class Agent(object):
         is_done = False
         while not is_done:
             # add code here
-            s1, r1, is_done, info, total_reward = self.act(a0)
+            s1, r1, is_done, info, total_reward = self.act(a0) # 环境动力学
             if display:
                 self.env.render()
-            a1 = self.perform_policy(s1, epsilon)
+            a1 = self.perform_policy(s1, epsilon) # 预执行action（实际没执行）
             # add your extra code here
-            s0, a0 = s1, a1
+            s0, a0 = s1, a1 # update state and action
             time_in_episode += 1
         if display:
             print(self.experience.last_episode)
+        # 返回episode的time step数和total reward
         return time_in_episode, total_reward  
                         
                         

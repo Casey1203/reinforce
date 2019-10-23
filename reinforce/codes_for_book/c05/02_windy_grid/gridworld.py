@@ -51,7 +51,7 @@ class GridMatrix(object):
                        default_reward: float = 0.0,     # 默认即时奖励值
                        default_value: float = 0.0       # 默认价值（这个有点多余）
                        ):
-        self.grids = None
+        self.grids = None # 一维列表，存放所有的grid对象
         self.n_height = n_height
         self.n_width = n_width
         self.len = n_width * n_height
@@ -139,7 +139,7 @@ class GridWorldEnv(gym.Env):
                        default_reward:float = 0,
                        default_type = 0,
                        windy=False):
-        self.u_size = u_size             # 当前格子绘制尺寸
+        self.u_size = u_size             # 当前格子绘制尺寸，单个各自的长宽
         self.n_width = n_width           # 格子世界宽度（以格子数计）
         self.n_height = n_height         # 高度
         self.width = u_size * n_width    # 场景宽度 screen width
@@ -152,14 +152,14 @@ class GridWorldEnv(gym.Env):
                                 n_height = self.n_height,
                                 default_reward = self.default_reward,
                                 default_type = self.default_type, 
-                                default_value = 0.0)    
+                                default_value = 0.0) # 产生格子列表   
         self.reward = 0         # for rendering
         self.action = None      # for rendering
         self.windy = windy      # 是否是有风格子世界
 
         # 0,1,2,3,4 represent left, right, up, down, -, five moves.
         self.action_space = spaces.Discrete(4)  
-        # 观察空间由low和high决定
+        # 观察空间由low和high决定，即格子的个数
         self.observation_space = spaces.Discrete(self.n_height * self.n_width)
         # 坐标原点为左下角，这个pyglet是一致的
         # 通过设置起始点、终止点以及特殊奖励和类型的格子可以构建各种不同类型的格子世界环境
@@ -185,6 +185,7 @@ class GridWorldEnv(gym.Env):
         return [seed]
 
     def _windy_effect(self, x, y):
+        # 当agent的状态，横坐标位于x处，则纵坐标受到风的影响，移动对应的格子数。
         new_x, new_y = x, y
         if self.windy:
             if new_x in [3, 4, 5, 8]:
@@ -215,12 +216,12 @@ class GridWorldEnv(gym.Env):
         if new_y >= self.n_height: new_y = self.n_height-1
         return new_x, new_y
         
-    def step(self, action):
+    def step(self, action): # 与环境交互一次
         assert self.action_space.contains(action), \
             "%r (%s) invalid" % (action, type(action))
         
         self.action = action    # action for rendering
-        old_x, old_y = self._state_to_xy(self.state)
+        old_x, old_y = self._state_to_xy(self.state) # 将状态转换成横纵坐标
         new_x, new_y = old_x, old_y
 
         # wind effect:
@@ -239,7 +240,7 @@ class GridWorldEnv(gym.Env):
         self.reward = self.grids.get_reward(new_x, new_y)
 
         done = self._is_end_state(new_x, new_y) 
-        self.state = self._xy_to_state(new_x, new_y)
+        self.state = self._xy_to_state(new_x, new_y) # 横纵坐标转换为状态
         # 提供格子世界所有的信息在info内
         info = {"x":new_x,"y":new_y, "grids":self.grids}
         return self.state, self.reward, done, info
