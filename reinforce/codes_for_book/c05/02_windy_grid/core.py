@@ -85,8 +85,9 @@ class Episode(object):
 
     def is_complete(self) -> bool:
         '''check if an episode is an complete episode
+        看当前trans_list中最后一个time step的状态是否结束
         '''
-        if self.len == 0: 
+        if self.len == 0:
             return False 
         return self.trans_list[self.len-1].is_done
 
@@ -105,7 +106,7 @@ class Experience(object):
     its experience.
     '''
     def __init__(self, capacity:int = 20000):
-        self.capacity = capacity    # 容量：指的是trans总数量
+        self.capacity = capacity    # 容量：指的是trans总数量，不是episode的个数
         self.episodes = []          # episode列表
         self.next_id = 0            # 下一个episode的Id
         self.total_trans = 0        # 总的状态转换数量
@@ -119,6 +120,7 @@ class Experience(object):
 
     @property
     def len(self):
+        # 完整的episode的个数
         return len(self.episodes)
 
     def _remove(self, index = 0):      
@@ -144,6 +146,9 @@ class Experience(object):
 
     def push(self, trans): 
         '''压入一个状态转换
+        如果buffer里已满，则丢掉第一个episode（注意不是trans）
+        如果buffer是空的，或者buffer中最后一个episode已经完整了，则新开一个episode对象，将该trans压进去
+        否则，就是正常情况，找到最新的episide，把该trans压进去
         '''
         if self.capacity <= 0:
             return
@@ -161,7 +166,7 @@ class Experience(object):
 
     def sample(self, batch_size=1): # sample transition
         '''randomly sample some transitions from agent's experience.abs
-        随机获取一定数量的状态转化对象Transition
+        随机获取一定数量的状态转化对象Transition，注意不是Episode
         args:
             number of transitions need to be sampled
         return:
@@ -202,7 +207,7 @@ class Agent(object):
         self.state = None   # 个体的当前状态
     
     def policy(self, A, s = None, Q = None, epsilon = None):
-        '''均一随机策略
+        '''均一随机策略，从action space中随机选择一个action
         '''
         return random.sample(self.A, k=1)[0]
     
@@ -211,12 +216,17 @@ class Agent(object):
         return int(action)
     
     def act(self, a0):
-        s0 = self.state
+        """
+        由环境的dynamic返回结果
+        """
+        s0 = self.state # 当前状态
         s1, r1, is_done, info = self.env.step(a0)
         # TODO add extra code here
+        # create trans object
         trans = Transition(s0, a0, r1, is_done, s1)
+        # 存储至buffer中
         total_reward = self.experience.push(trans)
-        self.state = s1
+        self.state = s1 # 更新agent当前状态
         return s1, r1, is_done, info, total_reward
 
     def learning_method(self,lambda_ = 0.9, gamma = 0.9, alpha = 0.5, epsilon = 0.2, display = False):
